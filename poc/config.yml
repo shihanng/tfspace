@@ -1,3 +1,4 @@
+auto_init: true
 dev:
   backend:
     - "dev.backend"
