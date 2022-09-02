@@ -7,6 +7,8 @@ export TF_CLI_ARGS="-var-file=dev.tfvars"
 
 `-c`, `--config` Use config file.
 
+`-q`, `--quite` Do not check if entry/file exists.
+
 ```
 tfspace cd -i
 tfspace backend add <env> <file>
