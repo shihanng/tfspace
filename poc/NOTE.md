@@ -4,3 +4,15 @@ export TF_CLI_ARGS="-var-file=dev.tfvars"
 ```
 
 `-i`, `--auto-init` Run `terraform init` automatically.
+
+`-c`, `--config` Use config file.
+
+```
+tfspace cd -i
+tfspace backend add <env> <file>
+tfspace backend rm <env> <file>
+tfspace varfile add <env> <file>
+tfspace varfile rm <env> <file>
+tfspace edit
+tfspace validate
+```

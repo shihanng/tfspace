@@ -1,5 +1,5 @@
 dev:
   backend:
     - "dev.backend"
-  var_files:
+  varfile:
     - "dev.tfvars"
