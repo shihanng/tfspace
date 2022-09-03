@@ -4,3 +4,4 @@ dev:
     - "dev.backend"
   varfile:
     - "dev.tfvars"
+  workspace: "dev"

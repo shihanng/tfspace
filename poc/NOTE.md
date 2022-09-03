@@ -1,6 +1,8 @@
 ```
 export TF_CLI_ARGS_init="-backend-config=dev.backend"
-export TF_CLI_ARGS="-var-file=dev.tfvars"
+export TF_CLI_ARGS_plan="-var-file=dev.tfvars"
+export TF_CLI_ARGS_apply="-var-file=dev.tfvars"
+export TF_WORKSPACE=dev
 ```
 
 `-i`, `--auto-init` Run `terraform init` automatically.
