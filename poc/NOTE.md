@@ -21,3 +21,6 @@ tfspace edit # Edit config
 tfspace validate # Validate config
 tfspace env # Show current environments
 ```
+
+- Auto completion?
+- Shell prompt?
