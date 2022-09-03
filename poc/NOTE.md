@@ -9,7 +9,7 @@ export TF_WORKSPACE=dev
 
 `-c`, `--config` Use config file.
 
-`-q`, `--quite` Do not check if entry/file exists.
+`-n`, `--no-verify` Do not check if entry/file exists.
 
 ```
 tfspace cd -i
