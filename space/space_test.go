@@ -14,6 +14,7 @@ func TestAddBackend(t *testing.T) {
 
 	testSpaces.AddBackend("dev", "backend.dev")
 	testSpaces.AddBackend("dev", "be.dev")
+	testSpaces.AddBackend("dev", "backend.dev")
 
 	expected := space.Spaces{
 		{
