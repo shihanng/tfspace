@@ -56,11 +56,7 @@ type Spaces []*Space
 // If the space does not exist, a new one will be created.
 // If the backend already exists in the space, it will not do anything.
 func (s *Spaces) AddBackend(name, backend string) {
-	space, found := lo.Find(*s, spaceHasName(name))
-
-	if !found {
-		space = &Space{Name: name} //nolint:exhaustruct
-	}
+	space, found := findSpace(*s, name)
 
 	space.addBackend(backend)
 
@@ -73,11 +69,7 @@ func (s *Spaces) AddBackend(name, backend string) {
 // If the space does not exist, a new one will be created.
 // If the var-file already exists in the space, it will not do anything.
 func (s *Spaces) AddVarfile(name, varfile string) {
-	space, found := lo.Find(*s, spaceHasName(name))
-
-	if !found {
-		space = &Space{Name: name} //nolint:exhaustruct
-	}
+	space, found := findSpace(*s, name)
 
 	space.addVarfile(varfile)
 
@@ -90,7 +82,7 @@ func (s *Spaces) AddVarfile(name, varfile string) {
 // If the space does not exist, it does not do anything.
 // If the var-file does not exist in the space, it will not do anything.
 func (s *Spaces) RemoveVarfile(name, varfile string) {
-	space, found := lo.Find(*s, spaceHasName(name))
+	space, found := findSpace(*s, name)
 
 	if !found {
 		return
@@ -103,7 +95,7 @@ func (s *Spaces) RemoveVarfile(name, varfile string) {
 // If the space does not exist, it does not do anything.
 // If the backend does not exist in the space, it will not do anything.
 func (s *Spaces) RemoveBackend(name, backend string) {
-	space, found := lo.Find(*s, spaceHasName(name))
+	space, found := findSpace(*s, name)
 
 	if !found {
 		return
@@ -115,11 +107,7 @@ func (s *Spaces) RemoveBackend(name, backend string) {
 // SetWorkspace set the value of workspace to the input value.
 // If space does not exist, if does not do anything.
 func (s *Spaces) SetWorkspace(name, workspace string) {
-	space, found := lo.Find(*s, spaceHasName(name))
-
-	if !found {
-		space = &Space{Name: name} //nolint:exhaustruct
-	}
+	space, found := findSpace(*s, name)
 
 	space.Workspace = workspace
 
@@ -131,13 +119,23 @@ func (s *Spaces) SetWorkspace(name, workspace string) {
 // UnsetWorkspace set the value of workspace to empty string.
 // If space does not exist, if does not do anything.
 func (s *Spaces) UnsetWorkspace(name string) {
-	space, found := lo.Find(*s, spaceHasName(name))
+	space, found := findSpace(*s, name)
 
 	if !found {
 		return
 	}
 
 	space.Workspace = ""
+}
+
+func findSpace(spaces Spaces, name string) (*Space, bool) {
+	space, found := lo.Find(spaces, spaceHasName(name))
+
+	if !found {
+		space = &Space{Name: name} //nolint:exhaustruct
+	}
+
+	return space, found
 }
 
 func spaceHasName(name string) func(*Space) bool {
