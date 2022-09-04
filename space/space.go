@@ -65,6 +65,34 @@ func (s *Spaces) RemoveBackend(name, backend string) {
 	space.removeBackend(backend)
 }
 
+// SetWorkspace set the value of workspace to the input value.
+// If space does not exist, if does not do anything.
+func (s *Spaces) SetWorkspace(name, workspace string) {
+	space, found := lo.Find(*s, spaceHasName(name))
+
+	if !found {
+		space = &Space{Name: name} //nolint:exhaustruct
+	}
+
+	space.Workspace = workspace
+
+	if !found {
+		*s = append(*s, space)
+	}
+}
+
+// UnsetWorkspace set the value of workspace to empty string.
+// If space does not exist, if does not do anything.
+func (s *Spaces) UnsetWorkspace(name string) {
+	space, found := lo.Find(*s, spaceHasName(name))
+
+	if !found {
+		return
+	}
+
+	space.Workspace = ""
+}
+
 func spaceHasName(name string) func(*Space) bool {
 	return func(space *Space) bool {
 		return space.Name == name

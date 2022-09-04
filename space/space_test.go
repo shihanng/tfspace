@@ -46,3 +46,39 @@ func TestRemoveBackend(t *testing.T) {
 		},
 	})
 }
+
+func TestSetWorkspace(t *testing.T) {
+	t.Parallel()
+
+	var testSpaces space.Spaces
+
+	testSpaces.SetWorkspace("dev", "dev_ws")
+	testSpaces.SetWorkspace("dev", "dev_ws_new")
+
+	assert.DeepEqual(t, testSpaces, space.Spaces{
+		{
+			Name:      "dev",
+			Workspace: "dev_ws_new",
+		},
+	})
+}
+
+func TestUnsetWorkspace(t *testing.T) {
+	t.Parallel()
+
+	testSpaces := space.Spaces{
+		{
+			Name:      "dev",
+			Workspace: "dev_ws",
+		},
+	}
+
+	testSpaces.UnsetWorkspace("dev")
+	testSpaces.UnsetWorkspace("stg")
+
+	assert.DeepEqual(t, testSpaces, space.Spaces{
+		{
+			Name: "dev",
+		},
+	})
+}
