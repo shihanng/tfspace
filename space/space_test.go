@@ -47,6 +47,46 @@ func TestRemoveBackend(t *testing.T) {
 	})
 }
 
+func TestAddVarfile(t *testing.T) {
+	t.Parallel()
+
+	var testSpaces space.Spaces
+
+	testSpaces.AddVarfile("dev", "dev.tfvars")
+	testSpaces.AddVarfile("dev", "abc.tfvars")
+	testSpaces.AddVarfile("dev", "dev.tfvars")
+
+	expected := space.Spaces{
+		{
+			Name:    "dev",
+			Varfile: []string{"dev.tfvars", "abc.tfvars"},
+		},
+	}
+
+	assert.DeepEqual(t, testSpaces, expected)
+}
+
+func TestRemoveVarfile(t *testing.T) {
+	t.Parallel()
+
+	testSpaces := space.Spaces{
+		{
+			Name:    "dev",
+			Varfile: []string{"dev.tfvars", "abc.tfvars"},
+		},
+	}
+
+	testSpaces.RemoveVarfile("dev", "dev.tfvars")
+	testSpaces.RemoveVarfile("stg", "stg.tfvars")
+
+	assert.DeepEqual(t, testSpaces, space.Spaces{
+		{
+			Name:    "dev",
+			Varfile: []string{"abc.tfvars"},
+		},
+	})
+}
+
 func TestSetWorkspace(t *testing.T) {
 	t.Parallel()
 

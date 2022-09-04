@@ -32,6 +32,23 @@ func (s *Space) removeBackend(backend string) {
 	s.Backend = rejected
 }
 
+func (s *Space) addVarfile(varfile string) {
+	index := lo.IndexOf(s.Varfile, varfile)
+
+	if index >= 0 {
+		return
+	}
+
+	s.Varfile = append(s.Varfile, varfile)
+}
+
+func (s *Space) removeVarfile(varfile string) {
+	rejected := lo.Reject(s.Varfile, func(val string, _ int) bool {
+		return val == varfile
+	})
+	s.Varfile = rejected
+}
+
 // Spaces is a list of Space.
 type Spaces []*Space
 
@@ -50,6 +67,36 @@ func (s *Spaces) AddBackend(name, backend string) {
 	if !found {
 		*s = append(*s, space)
 	}
+}
+
+// AddVarfile adds var-file into the space of name.
+// If the space does not exist, a new one will be created.
+// If the var-file already exists in the space, it will not do anything.
+func (s *Spaces) AddVarfile(name, varfile string) {
+	space, found := lo.Find(*s, spaceHasName(name))
+
+	if !found {
+		space = &Space{Name: name} //nolint:exhaustruct
+	}
+
+	space.addVarfile(varfile)
+
+	if !found {
+		*s = append(*s, space)
+	}
+}
+
+// RemoveVarfile removes var-file from the space.
+// If the space does not exist, it does not do anything.
+// If the var-file does not exist in the space, it will not do anything.
+func (s *Spaces) RemoveVarfile(name, varfile string) {
+	space, found := lo.Find(*s, spaceHasName(name))
+
+	if !found {
+		return
+	}
+
+	space.removeVarfile(varfile)
 }
 
 // RemoveBackend removes backend from the space.
