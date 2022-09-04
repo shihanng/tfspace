@@ -25,6 +25,13 @@ func (s *Space) addBackend(backend string) {
 	s.Backend = append(s.Backend, backend)
 }
 
+func (s *Space) removeBackend(backend string) {
+	rejected := lo.Reject(s.Backend, func(val string, _ int) bool {
+		return val == backend
+	})
+	s.Backend = rejected
+}
+
 // Spaces is a list of Space.
 type Spaces []*Space
 
@@ -43,6 +50,19 @@ func (s *Spaces) AddBackend(name, backend string) {
 	if !found {
 		*s = append(*s, space)
 	}
+}
+
+// RemoveBackend removes backend from the space.
+// If the space does not exist, it does not do anything.
+// If the backend does not exist in the space, it will not do anything.
+func (s *Spaces) RemoveBackend(name, backend string) {
+	space, found := lo.Find(*s, spaceHasName(name))
+
+	if !found {
+		return
+	}
+
+	space.removeBackend(backend)
 }
 
 func spaceHasName(name string) func(*Space) bool {

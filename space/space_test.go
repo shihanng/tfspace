@@ -24,3 +24,24 @@ func TestAddBackend(t *testing.T) {
 
 	assert.DeepEqual(t, testSpaces, expected)
 }
+
+func TestRemoveBackend(t *testing.T) {
+	t.Parallel()
+
+	testSpaces := space.Spaces{
+		{
+			Name:    "dev",
+			Backend: []string{"backend.dev", "be.dev"},
+		},
+	}
+
+	testSpaces.RemoveBackend("dev", "backend.dev")
+	testSpaces.RemoveBackend("stg", "backend.stg")
+
+	assert.DeepEqual(t, testSpaces, space.Spaces{
+		{
+			Name:    "dev",
+			Backend: []string{"be.dev"},
+		},
+	})
+}
