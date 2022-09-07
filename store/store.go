@@ -17,7 +17,7 @@ func Load(path string) (space.Spaces, error) {
 
 	var v yaml.MapSlice
 	if err := yaml.Unmarshal(dat, &v); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "store: decode yaml")
 	}
 
 	return spacesFromMapSlice(v)
@@ -42,7 +42,7 @@ func spacesFromMapSlice(ms yaml.MapSlice) (space.Spaces, error) {
 		}
 
 		if err := mapstructure.Decode(values, &sp); err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "store: decode mapstructure")
 		}
 
 		spaces = append(spaces, &sp)
