@@ -23,6 +23,33 @@ func Load(path string) (space.Spaces, error) {
 	return spacesFromMapSlice(v)
 }
 
+func Save(path string, spaces space.Spaces) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	payload := make(yaml.MapSlice, 0, len(spaces))
+
+	for _, space := range spaces {
+		payload = append(payload, yaml.MapItem{
+			Key: space.Name,
+			Value: struct {
+				Backend   []string
+				Varfile   []string
+				Workspace string
+			}{
+				Backend:   space.Backend,
+				Varfile:   space.Varfile,
+				Workspace: space.Workspace,
+			},
+		})
+	}
+
+	return yaml.NewEncoder(file, yaml.IndentSequence(true)).Encode(payload)
+}
+
 func spacesFromMapSlice(ms yaml.MapSlice) (space.Spaces, error) {
 	spaces := make(space.Spaces, 0, len(ms))
 

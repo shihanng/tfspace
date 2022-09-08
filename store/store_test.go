@@ -1,32 +1,46 @@
 package store_test
 
 import (
+	"os"
 	"testing"
 
 	"github.com/shihanng/tfspace/space"
 	"github.com/shihanng/tfspace/store"
 	"gotest.tools/v3/assert"
+	"gotest.tools/v3/golden"
 )
+
+var testSpaces = space.Spaces{
+	{
+		Name:      "dev",
+		Backend:   []string{"dev.backend"},
+		Varfile:   []string{"dev.tfvars"},
+		Workspace: "dev",
+	},
+	{
+		Name:    "stg",
+		Backend: []string{"stg.backend", "stg.be"},
+		Varfile: []string{"stg.tfvars", "stg-secret.tfvars"},
+	},
+}
 
 func TestLoad(t *testing.T) {
 	actual, err := store.Load("./testdata/tfspace.yml")
-
-	expected := space.Spaces{
-		{
-			Name:      "dev",
-			Backend:   []string{"dev.backend"},
-			Varfile:   []string{"dev.tfvars"},
-			Workspace: "dev",
-		},
-		{
-			Name:    "stg",
-			Backend: []string{"stg.backend", "stg.be"},
-			Varfile: []string{"stg.tfvars", "stg-secret.tfvars"},
-		},
-	}
-
 	assert.NilError(t, err)
-	assert.DeepEqual(t, actual, expected)
+	assert.DeepEqual(t, actual, testSpaces)
+}
+
+func TestSave(t *testing.T) {
+	f, err := os.CreateTemp("", "testdata.yml")
+	assert.NilError(t, err)
+
+	defer os.Remove(f.Name())
+
+	assert.NilError(t, store.Save(f.Name(), testSpaces))
+
+	actual, err := os.ReadFile(f.Name())
+	assert.NilError(t, err)
+	golden.AssertBytes(t, actual, "tfspace.yml")
 }
 
 func TestLoad_Errors(t *testing.T) {

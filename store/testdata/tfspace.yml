@@ -1,13 +1,14 @@
 dev:
   backend:
-    - "dev.backend"
+    - dev.backend
   varfile:
-    - "dev.tfvars"
-  workspace: "dev"
+    - dev.tfvars
+  workspace: dev
 stg:
   backend:
-    - "stg.backend"
-    - "stg.be"
+    - stg.backend
+    - stg.be
   varfile:
-    - "stg.tfvars"
-    - "stg-secret.tfvars"
+    - stg.tfvars
+    - stg-secret.tfvars
+  workspace: ""
