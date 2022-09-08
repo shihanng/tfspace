@@ -1,0 +1,8 @@
+dev: "dev.backend"
+stg:
+  backend:
+    - "stg.backend"
+    - "stg.be"
+  varfile:
+    - "stg.tfvars"
+    - "stg-secret.tfvars"

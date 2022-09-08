@@ -1,0 +1,5 @@
+dev:
+  backend: "dev.backend"
+  workspace: "dev"
+stg:
+  backend: "stg.backend"
