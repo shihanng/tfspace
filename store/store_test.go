@@ -10,7 +10,7 @@ import (
 	"gotest.tools/v3/golden"
 )
 
-var testSpaces = space.Spaces{
+var testSpaces = space.Spaces{ //nolint:gochecknoglobals
 	{
 		Name:      "dev",
 		Backend:   []string{"dev.backend"},
@@ -25,25 +25,35 @@ var testSpaces = space.Spaces{
 }
 
 func TestLoad(t *testing.T) {
+	t.Parallel()
+
 	actual, err := store.Load("./testdata/tfspace.yml")
 	assert.NilError(t, err)
 	assert.DeepEqual(t, actual, testSpaces)
 }
 
 func TestSave(t *testing.T) {
-	f, err := os.CreateTemp("", "testdata.yml")
+	t.Parallel()
+
+	target, err := os.CreateTemp("", "testdata.yml")
 	assert.NilError(t, err)
 
-	defer os.Remove(f.Name())
+	defer func() {
+		if err := os.Remove(target.Name()); err != nil {
+			t.Log(err)
+		}
+	}()
 
-	assert.NilError(t, store.Save(f.Name(), testSpaces))
+	assert.NilError(t, store.Save(target.Name(), testSpaces))
 
-	actual, err := os.ReadFile(f.Name())
+	actual, err := os.ReadFile(target.Name())
 	assert.NilError(t, err)
 	golden.AssertBytes(t, actual, "tfspace.yml")
 }
 
 func TestLoad_Errors(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		path   string
 		errMsg string
