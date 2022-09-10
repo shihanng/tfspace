@@ -1,3 +1,4 @@
+// Package main is the entrypoint to tfspace.
 package main
 
 import (

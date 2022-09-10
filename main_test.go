@@ -9,20 +9,18 @@ import (
 	"github.com/spf13/pflag" // godog v0.11.0 and later
 )
 
-var opts = godog.Options{
+var opts = godog.Options{ //nolint:exhaustruct,gochecknoglobals
 	Output: colors.Colored(os.Stdout),
 	Format: "progress", // can define default values
 }
 
-func init() {
-	godog.BindCommandLineFlags("godog.", &opts) // godog v0.11.0 and later
-}
-
 func TestMain(m *testing.M) {
+	godog.BindCommandLineFlags("godog.", &opts)
+
 	pflag.Parse()
 	opts.Paths = pflag.Args()
 
-	status := godog.TestSuite{
+	status := godog.TestSuite{ //nolint:exhaustruct
 		Name: "godogs",
 		// TestSuiteInitializer: InitializeTestSuite,
 		// ScenarioInitializer:  InitializeScenario,
