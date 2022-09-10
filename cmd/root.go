@@ -5,10 +5,14 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // Execute is the entrypoint to tfspace root command.
 func Execute(options ...func(*cobra.Command)) {
+	viper.SetEnvPrefix("TFSPACE")
+	viper.AutomaticEnv()
+
 	rootCmd := &cobra.Command{ //nolint:exhaustruct
 		SilenceUsage: true,
 		Use:          "tfspace",
