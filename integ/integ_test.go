@@ -15,6 +15,7 @@ import (
 	"github.com/cucumber/godog/colors"
 	"github.com/shihanng/tfspace/cmd"
 	"github.com/spf13/pflag"
+	"gotest.tools/v3/fs"
 	"gotest.tools/v3/golden"
 )
 
@@ -67,6 +68,17 @@ func tfspaceShouldPrintContentOnScreen(ctx context.Context, filename string) err
 	})
 }
 
+func aProjectWithoutTfspaceyml(ctx context.Context) (context.Context, error) {
+	if err := assertWith(func(a *T) {
+		dir := fs.NewDir(a, "new_space")
+		ctx = withConfigPath(ctx, dir.Path())
+	}); err != nil {
+		return ctx, err
+	}
+
+	return ctx, nil
+}
+
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
 		return context.WithValue(ctx, outputCtxKey{}, new(bytes.Buffer)), nil
@@ -74,6 +86,7 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 
 	ctx.Step(`^Terraformer runs "([^"]*)"$`, terraformerRuns)
 	ctx.Step(`^tfspace should print "([^"]*)" content on screen$`, tfspaceShouldPrintContentOnScreen)
+	ctx.Step(`^a project without tfspace\.yml$`, aProjectWithoutTfspaceyml)
 }
 
 type outputCtxKey struct{}
@@ -84,6 +97,20 @@ func getOutput(ctx context.Context) (*bytes.Buffer, error) {
 		return nil, errors.New("bytes.Buffer not found in context")
 	}
 	return out, nil
+}
+
+type configPathCtxKey struct{}
+
+func withConfigPath(ctx context.Context, path string) context.Context {
+	return context.WithValue(ctx, configPathCtxKey{}, path)
+}
+
+func getConfigPath(ctx context.Context) (string, error) {
+	path, ok := ctx.Value(configPathCtxKey{}).(string)
+	if !ok {
+		return "", errors.New("config path not found in context")
+	}
+	return path, nil
 }
 
 type T struct {
@@ -97,6 +124,10 @@ func (t *T) Log(args ...interface{}) {
 func (t *T) FailNow() {}
 
 func (t *T) Fail() {}
+
+func (t *T) Cleanup(f func()) {
+	f()
+}
 
 func assertWith(f func(t *T)) error {
 	var t T
