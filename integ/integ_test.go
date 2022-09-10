@@ -3,6 +3,7 @@ package integ_test
 import (
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -27,6 +28,7 @@ func TestMain(m *testing.M) {
 
 	godog.BindCommandLineFlags("godog.", &opts)
 
+	flag.Parse()
 	pflag.Parse()
 	opts.Paths = pflag.Args()
 
