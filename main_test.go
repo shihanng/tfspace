@@ -3,18 +3,21 @@ package main
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 	"github.com/spf13/pflag" // godog v0.11.0 and later
 )
 
-var opts = godog.Options{ //nolint:exhaustruct,gochecknoglobals
-	Output: colors.Colored(os.Stdout),
-	Format: "progress", // can define default values
-}
-
 func TestMain(m *testing.M) {
+	// These are default values. We can override these with flags.
+	opts := godog.Options{ //nolint:exhaustruct
+		Output:    colors.Colored(os.Stdout),
+		Format:    "pretty",
+		Randomize: time.Now().UTC().UnixNano(), // randomize scenario execution order
+	}
+
 	godog.BindCommandLineFlags("godog.", &opts)
 
 	pflag.Parse()
