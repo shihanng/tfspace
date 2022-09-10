@@ -2,6 +2,8 @@
 package cmd
 
 import (
+	"io"
+
 	"github.com/spf13/cobra"
 )
 
@@ -25,5 +27,13 @@ func Execute(options ...func(*cobra.Command)) {
 func WithArgs(args ...string) func(*cobra.Command) {
 	return func(c *cobra.Command) {
 		c.SetArgs(args)
+	}
+}
+
+// WithOutErr sets Stdout and Stderr output to out. This is for testing purpose.
+func WithOutErr(out io.Writer) func(*cobra.Command) {
+	return func(c *cobra.Command) {
+		c.SetOut(out)
+		c.SetErr(out)
 	}
 }
