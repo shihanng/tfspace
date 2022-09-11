@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 func newAddCommand() *cobra.Command {
@@ -19,5 +20,7 @@ func newAddCommand() *cobra.Command {
 }
 
 func runAdd(_ *cobra.Command, _ []string) error {
+	logger := zap.L()
+	logger.Debug("workspace add")
 	return nil
 }
