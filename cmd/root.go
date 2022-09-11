@@ -19,6 +19,11 @@ func Execute(options ...func(*cobra.Command)) error {
 		Use:          "tfspace",
 		Short:        "Manage multiple environments in a Terraform project with ease.",
 		Long:         "Manage multiple environments in a Terraform project with ease.",
+
+		// Disable completion for now.
+		CompletionOptions: cobra.CompletionOptions{
+			DisableDefaultCmd: true,
+		},
 	}
 
 	for _, option := range options {
