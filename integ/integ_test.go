@@ -64,27 +64,29 @@ func (s *stepDefinition) terraformerRuns(ctx context.Context, args string) (cont
 	return withcCmdResultCtx(ctx, res), nil
 }
 
-func (s *stepDefinition) tfspaceShouldPrintContentOnScreen(ctx context.Context, filename string) error {
+func (s *stepDefinition) tfspaceShouldPrintOnScreen(ctx context.Context, filename, resultType string) error {
 	result, err := cmdResult(ctx)
 	if err != nil {
 		return err
 	}
 
-	return assertWith(func(a *T) {
-		result.Assert(a, icmd.Expected{ExitCode: 0})
-		golden.Assert(a, result.Stdout(), normalizeFilename(filename))
-	})
-}
+	var (
+		output   string
+		exitCode int
+	)
 
-func (s *stepDefinition) tfspaceShouldPrintErrorOnScreen(ctx context.Context, filename string) error {
-	result, err := cmdResult(ctx)
-	if err != nil {
-		return err
+	switch resultType {
+	case "content":
+		exitCode = 0
+		output = result.Stdout()
+	case "error":
+		exitCode = 1
+		output = result.Stderr()
 	}
 
 	return assertWith(func(a *T) {
-		result.Assert(a, icmd.Expected{ExitCode: 1})
-		golden.Assert(a, result.Stderr(), normalizeFilename(filename))
+		result.Assert(a, icmd.Expected{ExitCode: exitCode})
+		golden.Assert(a, output, normalizeFilename(filename))
 	})
 }
 
@@ -106,8 +108,7 @@ func InitializeScenario(binPath string) func(ctx *godog.ScenarioContext) {
 		}
 
 		ctx.Step(`^Terraformer runs "tfspace ([^"]*)"$`, sd.terraformerRuns)
-		ctx.Step(`^tfspace should print "([^"]*)" content on screen$`, sd.tfspaceShouldPrintContentOnScreen)
-		ctx.Step(`^tfspace should print "([^"]*)" error on screen$`, sd.tfspaceShouldPrintErrorOnScreen)
+		ctx.Step(`^tfspace should print "([^"]*)" (error|content) on screen$`, sd.tfspaceShouldPrintOnScreen)
 		ctx.Step(`^a project without tfspace\.yml$`, sd.aProjectWithoutTfspaceyml)
 	}
 }
