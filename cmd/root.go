@@ -4,12 +4,13 @@ package cmd
 import (
 	"io"
 
+	"github.com/shihanng/tfspace/cmd/workspace"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 // Execute is the entrypoint to tfspace root command.
-func Execute(options ...func(*cobra.Command)) {
+func Execute(options ...func(*cobra.Command)) error {
 	viper.SetEnvPrefix("TFSPACE")
 	viper.AutomaticEnv()
 
@@ -24,7 +25,7 @@ func Execute(options ...func(*cobra.Command)) {
 		option(rootCmd)
 	}
 
-	cobra.CheckErr(rootCmd.Execute())
+	return rootCmd.Execute()
 }
 
 // WithArgs pass arguments to root command. This is for testing purpose.

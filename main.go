@@ -3,8 +3,9 @@ package main
 
 import (
 	"github.com/shihanng/tfspace/cmd"
+	"github.com/spf13/cobra"
 )
 
 func main() {
-	cmd.Execute()
+	cobra.CheckErr(cmd.Execute())
 }
