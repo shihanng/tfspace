@@ -8,7 +8,8 @@ Available Commands:
   workspace   Add/remove Terraform's workspace to tfspace
 
 Flags:
-      --debug   emits debug level logs
-  -h, --help    help for tfspace
+  -c, --config string   path to tfspace.yml file (default "./tfspace.yml")
+      --debug           emits debug level logs
+  -h, --help            help for tfspace
 
 Use "tfspace [command] --help" for more information about a command.

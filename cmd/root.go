@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/shihanng/tfspace/cmd/workspace"
+	"github.com/shihanng/tfspace/config"
 	"github.com/shihanng/tfspace/flag"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,6 +34,7 @@ func Execute(options ...func(*cobra.Command)) error {
 	rootCmd.AddCommand(workspace.NewCommand())
 
 	flag.Bool(rootCmd.PersistentFlags(), "debug", false, "emits debug level logs")
+	config.WithConfig(rootCmd)
 
 	for _, option := range options {
 		option(rootCmd)

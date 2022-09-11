@@ -2,6 +2,7 @@ package integ_test
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -10,14 +11,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cockroachdb/errors"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 	"github.com/spf13/pflag"
+	"gotest.tools/v3/assert"
+	"gotest.tools/v3/env"
 	"gotest.tools/v3/fs"
 	"gotest.tools/v3/golden"
 	"gotest.tools/v3/icmd"
 )
+
+const tmpDirPrefix = "tfspace_integtest"
 
 func TestMain(m *testing.M) {
 	// These are default values. We can override these with flags.
@@ -103,13 +107,24 @@ func (s *stepDefinition) tfspaceShouldPrintOnScreen(ctx context.Context, filenam
 
 func (s *stepDefinition) aProjectWithoutTfspaceyml(ctx context.Context) (context.Context, error) {
 	if err := assertWith(func(a *T) {
-		dir := fs.NewDir(a, "new_space")
-		ctx = withConfigPath(ctx, dir.Path())
+		dir := fs.NewDir(a, tmpDirPrefix)
+		env.ChangeWorkingDir(a, dir.Path())
 	}); err != nil {
 		return ctx, err
 	}
 
 	return ctx, nil
+}
+
+func (s *stepDefinition) theTfspaceymlShouldContain(expected *godog.DocString) error {
+	actual, err := os.ReadFile("./tfspace.yml")
+	if err != nil {
+		return err
+	}
+
+	return assertWith(func(a *T) {
+		assert.Equal(a, string(actual), expected.Content)
+	})
 }
 
 func InitializeScenario(binPath string) func(ctx *godog.ScenarioContext) {
@@ -122,21 +137,8 @@ func InitializeScenario(binPath string) func(ctx *godog.ScenarioContext) {
 		ctx.Step(`^tfspace should print "([^"]*)" (error|content) on screen$`, sd.tfspaceShouldPrintOnScreen)
 		ctx.Step(`^a project without tfspace\.yml$`, sd.aProjectWithoutTfspaceyml)
 		ctx.Step(`^tfspace should run without error$`, sd.tfspaceShouldRunWithoutError)
+		ctx.Step(`^the tfspace\.yml should contain:$`, sd.theTfspaceymlShouldContain)
 	}
-}
-
-type configPathCtxKey struct{}
-
-func withConfigPath(ctx context.Context, path string) context.Context {
-	return context.WithValue(ctx, configPathCtxKey{}, path)
-}
-
-func getConfigPath(ctx context.Context) (string, error) {
-	path, ok := ctx.Value(configPathCtxKey{}).(string)
-	if !ok {
-		return "", errors.New("config path not found in context")
-	}
-	return path, nil
 }
 
 type cmdResultCtxKey struct{}
@@ -158,15 +160,20 @@ type T struct {
 }
 
 func (t *T) Log(args ...interface{}) {
-	t.err = errors.New(fmt.Sprintln(args...))
+	fmt.Println(args...)
 }
 
-func (t *T) FailNow() {}
+func (t *T) FailNow() {
+	t.err = errors.New("integ_test: fail now")
+}
 
-func (t *T) Fail() {}
+func (t *T) Fail() {
+	t.err = errors.New("integ_test: fail")
+}
 
 func (t *T) Cleanup(f func()) {
-	f()
+	// TODO(shihanng): Need to find a way to execute cleanup
+	// in https://pkg.go.dev/github.com/cucumber/godog#ScenarioContext.After.
 }
 
 func assertWith(f func(t *T)) error {
