@@ -1,11 +1,11 @@
 package integ_test
 
 import (
-	"bytes"
 	"context"
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -13,10 +13,10 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
-	"github.com/shihanng/tfspace/cmd"
 	"github.com/spf13/pflag"
 	"gotest.tools/v3/fs"
 	"gotest.tools/v3/golden"
+	"gotest.tools/v3/icmd"
 )
 
 func TestMain(m *testing.M) {
@@ -29,13 +29,19 @@ func TestMain(m *testing.M) {
 
 	godog.BindCommandLineFlags("godog.", &opts)
 
+	path := flag.String("path", "../tfspace", "path to the tfspace binary")
+	binPath, err := filepath.Abs(*path)
+	if err != nil {
+		panic(err)
+	}
+
 	flag.Parse()
 	pflag.Parse()
 	opts.Paths = pflag.Args()
 
 	status := godog.TestSuite{ //nolint:exhaustruct
 		Name:                "tfspace",
-		ScenarioInitializer: InitializeScenario,
+		ScenarioInitializer: InitializeScenario(binPath),
 		Options:             &opts,
 	}.Run()
 
@@ -47,28 +53,42 @@ func TestMain(m *testing.M) {
 	os.Exit(status)
 }
 
-func terraformerRuns(ctx context.Context, args string) error {
-	out, err := getOutput(ctx)
-	if err != nil {
-		return err
-	}
-
-	cmd.Execute(cmd.WithArgs(strings.Fields(args)...), cmd.WithOutErr(out))
-	return nil
+type stepDefinition struct {
+	binPath string
 }
 
-func tfspaceShouldPrintContentOnScreen(ctx context.Context, filename string) error {
-	out, err := getOutput(ctx)
+func (s *stepDefinition) terraformerRuns(ctx context.Context, args string) (context.Context, error) {
+	cmd := icmd.Command(s.binPath, strings.Fields(args)...)
+	res := icmd.RunCmd(cmd)
+
+	return withcCmdResultCtx(ctx, res), nil
+}
+
+func (s *stepDefinition) tfspaceShouldPrintContentOnScreen(ctx context.Context, filename string) error {
+	result, err := cmdResult(ctx)
 	if err != nil {
 		return err
 	}
 
 	return assertWith(func(a *T) {
-		golden.Assert(a, out.String(), filename+".txt")
+		result.Assert(a, icmd.Expected{ExitCode: 0})
+		golden.Assert(a, result.Stdout(), normalizeFilename(filename))
 	})
 }
 
-func aProjectWithoutTfspaceyml(ctx context.Context) (context.Context, error) {
+func (s *stepDefinition) tfspaceShouldPrintErrorOnScreen(ctx context.Context, filename string) error {
+	result, err := cmdResult(ctx)
+	if err != nil {
+		return err
+	}
+
+	return assertWith(func(a *T) {
+		result.Assert(a, icmd.Expected{ExitCode: 1})
+		golden.Assert(a, result.Stderr(), normalizeFilename(filename))
+	})
+}
+
+func (s *stepDefinition) aProjectWithoutTfspaceyml(ctx context.Context) (context.Context, error) {
 	if err := assertWith(func(a *T) {
 		dir := fs.NewDir(a, "new_space")
 		ctx = withConfigPath(ctx, dir.Path())
@@ -79,24 +99,17 @@ func aProjectWithoutTfspaceyml(ctx context.Context) (context.Context, error) {
 	return ctx, nil
 }
 
-func InitializeScenario(ctx *godog.ScenarioContext) {
-	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
-		return context.WithValue(ctx, outputCtxKey{}, new(bytes.Buffer)), nil
-	})
+func InitializeScenario(binPath string) func(ctx *godog.ScenarioContext) {
+	return func(ctx *godog.ScenarioContext) {
+		sd := stepDefinition{
+			binPath: binPath,
+		}
 
-	ctx.Step(`^Terraformer runs "([^"]*)"$`, terraformerRuns)
-	ctx.Step(`^tfspace should print "([^"]*)" content on screen$`, tfspaceShouldPrintContentOnScreen)
-	ctx.Step(`^a project without tfspace\.yml$`, aProjectWithoutTfspaceyml)
-}
-
-type outputCtxKey struct{}
-
-func getOutput(ctx context.Context) (*bytes.Buffer, error) {
-	out, ok := ctx.Value(outputCtxKey{}).(*bytes.Buffer)
-	if !ok {
-		return nil, errors.New("bytes.Buffer not found in context")
+		ctx.Step(`^Terraformer runs "tfspace ([^"]*)"$`, sd.terraformerRuns)
+		ctx.Step(`^tfspace should print "([^"]*)" content on screen$`, sd.tfspaceShouldPrintContentOnScreen)
+		ctx.Step(`^tfspace should print "([^"]*)" error on screen$`, sd.tfspaceShouldPrintErrorOnScreen)
+		ctx.Step(`^a project without tfspace\.yml$`, sd.aProjectWithoutTfspaceyml)
 	}
-	return out, nil
 }
 
 type configPathCtxKey struct{}
@@ -111,6 +124,20 @@ func getConfigPath(ctx context.Context) (string, error) {
 		return "", errors.New("config path not found in context")
 	}
 	return path, nil
+}
+
+type cmdResultCtxKey struct{}
+
+func withcCmdResultCtx(ctx context.Context, result *icmd.Result) context.Context {
+	return context.WithValue(ctx, cmdResultCtxKey{}, result)
+}
+
+func cmdResult(ctx context.Context) (*icmd.Result, error) {
+	result, ok := ctx.Value(cmdResultCtxKey{}).(*icmd.Result)
+	if !ok {
+		return nil, errors.New("cmdResult not in context")
+	}
+	return result, nil
 }
 
 type T struct {
@@ -133,4 +160,8 @@ func assertWith(f func(t *T)) error {
 	var t T
 	f(&t)
 	return t.err
+}
+
+func normalizeFilename(filename string) string {
+	return strings.ReplaceAll(filename, " ", "_") + ".txt"
 }
