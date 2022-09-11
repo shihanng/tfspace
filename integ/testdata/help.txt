@@ -1,9 +1,13 @@
 Manage multiple environments in a Terraform project with ease.
 
 Usage:
+  tfspace [command]
+
+Available Commands:
+  help        Help about any command
+  workspace   Add/remove Terraform's workspace to tfspace
 
 Flags:
   -h, --help   help for tfspace
 
-Additional help topics:
-  tfspace workspace Add/remove Terraform's workspace to tfspace
+Use "tfspace [command] --help" for more information about a command.

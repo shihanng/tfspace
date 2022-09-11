@@ -64,6 +64,17 @@ func (s *stepDefinition) terraformerRuns(ctx context.Context, args string) (cont
 	return withcCmdResultCtx(ctx, res), nil
 }
 
+func (s *stepDefinition) tfspaceShouldRunWithoutError(ctx context.Context) error {
+	result, err := cmdResult(ctx)
+	if err != nil {
+		return err
+	}
+
+	return assertWith(func(a *T) {
+		result.Assert(a, icmd.Expected{ExitCode: 0})
+	})
+}
+
 func (s *stepDefinition) tfspaceShouldPrintOnScreen(ctx context.Context, filename, resultType string) error {
 	result, err := cmdResult(ctx)
 	if err != nil {
@@ -110,6 +121,7 @@ func InitializeScenario(binPath string) func(ctx *godog.ScenarioContext) {
 		ctx.Step(`^Terraformer runs "tfspace ([^"]*)"$`, sd.terraformerRuns)
 		ctx.Step(`^tfspace should print "([^"]*)" (error|content) on screen$`, sd.tfspaceShouldPrintOnScreen)
 		ctx.Step(`^a project without tfspace\.yml$`, sd.aProjectWithoutTfspaceyml)
+		ctx.Step(`^tfspace should run without error$`, sd.tfspaceShouldRunWithoutError)
 	}
 }
 

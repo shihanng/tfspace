@@ -15,17 +15,18 @@ func Execute(options ...func(*cobra.Command)) error {
 	viper.AutomaticEnv()
 
 	rootCmd := &cobra.Command{ //nolint:exhaustruct
-		SilenceUsage:  true,
-		SilenceErrors: true,
 		Use:           "tfspace",
 		Short:         "Manage multiple environments in a Terraform project with ease.",
 		Long:          "Manage multiple environments in a Terraform project with ease.",
+		SilenceErrors: true,
 
 		// Disable completion for now.
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
 	}
+
+	rootCmd.AddCommand(workspace.NewCommand())
 
 	for _, option := range options {
 		option(rootCmd)
