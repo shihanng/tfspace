@@ -15,10 +15,11 @@ func Execute(options ...func(*cobra.Command)) error {
 	viper.AutomaticEnv()
 
 	rootCmd := &cobra.Command{ //nolint:exhaustruct
-		SilenceUsage: true,
-		Use:          "tfspace",
-		Short:        "Manage multiple environments in a Terraform project with ease.",
-		Long:         "Manage multiple environments in a Terraform project with ease.",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Use:           "tfspace",
+		Short:         "Manage multiple environments in a Terraform project with ease.",
+		Long:          "Manage multiple environments in a Terraform project with ease.",
 
 		// Disable completion for now.
 		CompletionOptions: cobra.CompletionOptions{
