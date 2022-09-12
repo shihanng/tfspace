@@ -59,6 +59,7 @@ func TestMain(m *testing.M) {
 
 type stepDefinition struct {
 	binPath string
+	t       *T
 }
 
 func (s *stepDefinition) terraformerRuns(ctx context.Context, args string) (context.Context, error) {
@@ -74,7 +75,7 @@ func (s *stepDefinition) tfspaceShouldRunWithoutError(ctx context.Context) error
 		return err
 	}
 
-	return assertWith(func(a *T) {
+	return s.assertWith(func(a *T) {
 		result.Assert(a, icmd.Expected{ExitCode: 0})
 	})
 }
@@ -99,16 +100,17 @@ func (s *stepDefinition) tfspaceShouldPrintOnScreen(ctx context.Context, filenam
 		output = result.Stderr()
 	}
 
-	return assertWith(func(a *T) {
+	return s.assertWith(func(a *T) {
 		result.Assert(a, icmd.Expected{ExitCode: exitCode})
 		golden.Assert(a, output, normalizeFilename(filename))
 	})
 }
 
 func (s *stepDefinition) aProjectWithoutTfspaceyml(ctx context.Context) (context.Context, error) {
-	if err := assertWith(func(a *T) {
+	if err := s.assertWith(func(a *T) {
 		dir := fs.NewDir(a, tmpDirPrefix)
 		env.ChangeWorkingDir(a, dir.Path())
+		fmt.Println(dir.Path())
 	}); err != nil {
 		return ctx, err
 	}
@@ -122,16 +124,27 @@ func (s *stepDefinition) theTfspaceymlShouldContain(expected *godog.DocString) e
 		return err
 	}
 
-	return assertWith(func(a *T) {
+	return s.assertWith(func(a *T) {
 		assert.Equal(a, string(actual), expected.Content)
 	})
+}
+
+func (s *stepDefinition) assertWith(f func(t *T)) error {
+	f(s.t)
+	return s.t.err
 }
 
 func InitializeScenario(binPath string) func(ctx *godog.ScenarioContext) {
 	return func(ctx *godog.ScenarioContext) {
 		sd := stepDefinition{
 			binPath: binPath,
+			t:       &T{},
 		}
+
+		ctx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
+			sd.t.runCleanup()
+			return ctx, nil
+		})
 
 		ctx.Step(`^Terraformer runs "tfspace ([^"]*)"$`, sd.terraformerRuns)
 		ctx.Step(`^tfspace should print "([^"]*)" (error|content) on screen$`, sd.tfspaceShouldPrintOnScreen)
@@ -156,7 +169,8 @@ func cmdResult(ctx context.Context) (*icmd.Result, error) {
 }
 
 type T struct {
-	err error
+	err          error
+	cleanupFuncs []func()
 }
 
 func (t *T) Log(args ...interface{}) {
@@ -172,14 +186,14 @@ func (t *T) Fail() {
 }
 
 func (t *T) Cleanup(f func()) {
-	// TODO(shihanng): Need to find a way to execute cleanup
-	// in https://pkg.go.dev/github.com/cucumber/godog#ScenarioContext.After.
+	t.cleanupFuncs = append(t.cleanupFuncs, f)
 }
 
-func assertWith(f func(t *T)) error {
-	var t T
-	f(&t)
-	return t.err
+func (t *T) runCleanup() {
+	for _, f := range t.cleanupFuncs {
+		defer f()
+	}
+	t.cleanupFuncs = nil
 }
 
 func normalizeFilename(filename string) string {
