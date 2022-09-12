@@ -9,11 +9,11 @@ import (
 // The return value is the address of a bool variable that stores the value of the flag.
 func Bool(pf *pflag.FlagSet, name string, value bool, usage string) {
 	pf.Bool(name, value, usage)
-	viper.BindPFlag(name, pf.Lookup(name))
+	_ = viper.BindPFlag(name, pf.Lookup(name))
 }
 
 // StringP is like String, but accepts a shorthand letter that can be used after a single dash.
 func StringP(pf *pflag.FlagSet, name, shorthand string, value string, usage string) {
 	pf.StringP(name, shorthand, value, usage)
-	viper.BindPFlag(name, pf.Lookup(name))
+	_ = viper.BindPFlag(name, pf.Lookup(name))
 }
