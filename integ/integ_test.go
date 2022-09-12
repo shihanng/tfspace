@@ -110,7 +110,6 @@ func (s *stepDefinition) aProjectWithoutTfspaceyml(ctx context.Context) (context
 	if err := s.assertWith(func(a *T) {
 		dir := fs.NewDir(a, tmpDirPrefix)
 		env.ChangeWorkingDir(a, dir.Path())
-		fmt.Println(dir.Path())
 	}); err != nil {
 		return ctx, err
 	}
