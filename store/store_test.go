@@ -52,7 +52,24 @@ func TestSave(t *testing.T) {
 		}
 	}()
 
-	assert.NilError(t, store.Save(target.Name(), testSpaces))
+	testSpacesWithProd := space.Spaces{ //nolint:gochecknoglobals
+		{
+			Name:      "dev",
+			Backend:   []string{"dev.backend"},
+			Varfile:   []string{"dev.tfvars"},
+			Workspace: "dev",
+		},
+		{
+			Name:    "stg",
+			Backend: []string{"stg.backend", "stg.be"},
+			Varfile: []string{"stg.tfvars", "stg-secret.tfvars"},
+		},
+		{
+			Name: "prod",
+		},
+	}
+
+	assert.NilError(t, store.Save(target.Name(), testSpacesWithProd))
 
 	actual, err := os.ReadFile(target.Name())
 	assert.NilError(t, err)

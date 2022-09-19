@@ -40,6 +40,10 @@ func Save(path string, spaces space.Spaces) (err error) {
 	payload := make(yaml.MapSlice, 0, len(spaces))
 
 	for _, space := range spaces {
+		if len(space.Backend) == 0 && len(space.Varfile) == 0 && space.Workspace == "" {
+			continue
+		}
+
 		payload = append(payload, yaml.MapItem{
 			Key: space.Name,
 			Value: struct {
