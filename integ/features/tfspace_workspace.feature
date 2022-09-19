@@ -10,12 +10,8 @@ Feature: workspace
     And the tfspace.yml should contain:
       """
       dev:
-        backend: []
-        varfile: []
         workspace: development
       stg:
-        backend: []
-        varfile: []
         workspace: staging
 
       """
@@ -23,12 +19,8 @@ Feature: workspace
     Then the tfspace.yml should contain:
       """
       dev:
-        backend: []
-        varfile: []
         workspace: dev
       stg:
-        backend: []
-        varfile: []
         workspace: staging
 
       """
@@ -37,13 +29,7 @@ Feature: workspace
     Then tfspace should run without error
     And the tfspace.yml should contain:
       """
-      dev:
-        backend: []
-        varfile: []
-        workspace: ""
       stg:
-        backend: []
-        varfile: []
         workspace: staging
 
       """
