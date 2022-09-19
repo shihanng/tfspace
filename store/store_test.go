@@ -32,6 +32,14 @@ func TestLoad(t *testing.T) {
 	assert.DeepEqual(t, actual, testSpaces)
 }
 
+func TestLoad_empty(t *testing.T) {
+	t.Parallel()
+
+	actual, err := store.Load("./testdata/tfspace_empty.yml")
+	assert.NilError(t, err)
+	assert.DeepEqual(t, actual, space.Spaces{})
+}
+
 func TestSave(t *testing.T) {
 	t.Parallel()
 
@@ -49,6 +57,25 @@ func TestSave(t *testing.T) {
 	actual, err := os.ReadFile(target.Name())
 	assert.NilError(t, err)
 	golden.AssertBytes(t, actual, "tfspace.yml")
+}
+
+func TestSave_empty(t *testing.T) {
+	t.Parallel()
+
+	target, err := os.CreateTemp("", "testdata.yml")
+	assert.NilError(t, err)
+
+	defer func() {
+		if err := os.Remove(target.Name()); err != nil {
+			t.Log(err)
+		}
+	}()
+
+	assert.NilError(t, store.Save(target.Name(), space.Spaces{}))
+
+	actual, err := os.ReadFile(target.Name())
+	assert.NilError(t, err)
+	golden.AssertBytes(t, actual, "tfspace_empty.yml")
 }
 
 func TestLoad_Errors(t *testing.T) {
