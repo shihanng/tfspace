@@ -10,6 +10,7 @@ func NewCommand() *cobra.Command {
 	}
 
 	workspaceCmd.AddCommand(newAddCommand())
+	workspaceCmd.AddCommand(newRmCommand())
 
 	return workspaceCmd
 }

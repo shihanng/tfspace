@@ -1,7 +1,7 @@
 Feature: workspace
   Terraformer needs to be able to add or remove workspace
 
-  Scenario: add workspace
+  Scenario: add or remove workspace
     Given a project without tfspace.yml
     When Terraformer runs "tfspace workspace add dev development"
     Then tfspace should run without error
@@ -26,6 +26,19 @@ Feature: workspace
         backend: []
         varfile: []
         workspace: dev
+      stg:
+        backend: []
+        varfile: []
+        workspace: staging
+
+      """
+    When Terraformer runs "tfspace workspace rm dev"
+    Then the tfspace.yml should contain:
+      """
+      dev:
+        backend: []
+        varfile: []
+        workspace: ""
       stg:
         backend: []
         varfile: []
