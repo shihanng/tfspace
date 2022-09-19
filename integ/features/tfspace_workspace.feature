@@ -33,7 +33,9 @@ Feature: workspace
 
       """
     When Terraformer runs "tfspace workspace rm dev"
-    Then the tfspace.yml should contain:
+    And Terraformer runs "tfspace workspace rm dev"
+    Then tfspace should run without error
+    And the tfspace.yml should contain:
       """
       dev:
         backend: []
