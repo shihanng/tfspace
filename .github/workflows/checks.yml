@@ -1,0 +1,53 @@
+name: Checks
+on:
+  push:
+    branches:
+      - trunk
+  pull_request:
+    branches:
+      - trunk
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: ["1.19", "1.18", "1.17"]
+
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.version }}
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+
+      - name: Run mod-check
+        run: go mod tidy && git --no-pager diff --exit-code -- go.mod go.sum
+
+      - name: Go build
+        run: go build
+
+      - name: Run tests
+        run: go test -covermode atomic -coverprofile=profile.cov -race -v ./... -count=1
+
+      - name: Send coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          GO111MODULE=off go get github.com/mattn/goveralls
+          $(go env GOPATH)/bin/goveralls -coverprofile=profile.cov -service=github
+
+  lints:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+
+      - name: Set up golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.49.0
