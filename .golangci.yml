@@ -1,0 +1,23 @@
+linters:
+  enable-all: true
+  disable:
+    # Abandoned, deprecated, archived
+    - exhaustivestruct
+    - ifshort
+    - scopelint
+    - maligned
+    - interfacer
+    - golint
+    - nosnakecase
+    - varcheck
+    - deadcode
+    # Generics
+    - contextcheck
+    - rowserrcheck
+    - sqlclosecheck
+    - structcheck
+    - wastedassign
+  fast: false
+
+issues:
+  exclude-use-default: false
