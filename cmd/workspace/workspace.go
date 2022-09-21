@@ -1,3 +1,4 @@
+// Package workspace is the workspace subcommand.
 package workspace
 
 import "github.com/spf13/cobra"
