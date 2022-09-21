@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func WithSpace(exec func(s space.Spaces)) error {
+func WithSpace(exec func(s *space.Spaces)) error {
 	logger := zap.L()
 
 	cfg, err := config.GetConfig()
@@ -31,7 +31,7 @@ func WithSpace(exec func(s space.Spaces)) error {
 		spaces = space.Spaces{}
 	}
 
-	exec(spaces)
+	exec(&spaces)
 
 	if err := store.Save(cfg.Path, spaces); err != nil {
 		return err

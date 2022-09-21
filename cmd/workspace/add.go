@@ -21,7 +21,7 @@ func newAddCommand() *cobra.Command {
 }
 
 func runAdd(_ *cobra.Command, args []string) error {
-	err := cmdspace.WithSpace(func(s space.Spaces) {
+	err := cmdspace.WithSpace(func(s *space.Spaces) {
 		s.SetWorkspace(args[0], args[1])
 	})
 
