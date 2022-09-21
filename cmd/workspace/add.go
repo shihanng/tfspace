@@ -11,7 +11,7 @@ func newAddCommand() *cobra.Command {
 		Use:           "add <space> <value>",
 		Short:         "Add Terraform's workspace to tfspace",
 		Long:          "Add Terraform's workspace <value> to tfspace's <space>",
-		Args:          cobra.ExactArgs(2),
+		Args:          cobra.ExactArgs(2), //nolint:gomnd
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE:          runAdd,
