@@ -21,3 +21,8 @@ linters:
 
 issues:
   exclude-use-default: false
+
+linters-settings:
+  wrapcheck:
+    ignorePackageGlobs:
+      - github.com/shihanng/tfspace/*

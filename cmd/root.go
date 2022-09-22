@@ -41,7 +41,7 @@ func Execute(options ...func(*cobra.Command)) error {
 		option(rootCmd)
 	}
 
-	return errors.Wrap(rootCmd.Execute(), "root: fail in execution")
+	return rootCmd.Execute() //nolint:wrapcheck
 }
 
 // WithArgs pass arguments to root command. This is for testing purpose.
