@@ -2,7 +2,6 @@ package integ_test
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
 	"github.com/spf13/pflag"
@@ -34,6 +34,7 @@ func TestMain(m *testing.M) {
 	godog.BindCommandLineFlags("godog.", &opts)
 
 	path := flag.String("path", "../tfspace", "path to the tfspace binary")
+
 	binPath, err := filepath.Abs(*path)
 	if err != nil {
 		panic(err)
@@ -76,7 +77,7 @@ func (s *stepDefinition) tfspaceShouldRunWithoutError(ctx context.Context) error
 	}
 
 	return s.assertWith(func(a *T) {
-		result.Assert(a, icmd.Expected{ExitCode: 0})
+		result.Assert(a, icmd.Expected{ExitCode: 0}) //nolint:exhaustruct
 	})
 }
 
@@ -101,7 +102,7 @@ func (s *stepDefinition) tfspaceShouldPrintOnScreen(ctx context.Context, filenam
 	}
 
 	return s.assertWith(func(a *T) {
-		result.Assert(a, icmd.Expected{ExitCode: exitCode})
+		result.Assert(a, icmd.Expected{ExitCode: exitCode}) //nolint:exhaustruct
 		golden.Assert(a, output, normalizeFilename(filename))
 	})
 }
@@ -120,7 +121,7 @@ func (s *stepDefinition) aProjectWithoutTfspaceyml(ctx context.Context) (context
 func (s *stepDefinition) theTfspaceymlShouldContain(expected *godog.DocString) error {
 	actual, err := os.ReadFile("./tfspace.yml")
 	if err != nil {
-		return err
+		return errors.Wrap(err, "integ: read tfspace file")
 	}
 
 	return s.assertWith(func(a *T) {
@@ -130,26 +131,28 @@ func (s *stepDefinition) theTfspaceymlShouldContain(expected *godog.DocString) e
 
 func (s *stepDefinition) assertWith(f func(t *T)) error {
 	f(s.t)
+
 	return s.t.err
 }
 
 func InitializeScenario(binPath string) func(ctx *godog.ScenarioContext) {
 	return func(ctx *godog.ScenarioContext) {
-		sd := stepDefinition{
+		stepDef := stepDefinition{
 			binPath: binPath,
-			t:       &T{},
+			t:       &T{}, //nolint:exhaustruct
 		}
 
 		ctx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
-			sd.t.runCleanup()
+			stepDef.t.runCleanup()
+
 			return ctx, nil
 		})
 
-		ctx.Step(`^Terraformer runs "tfspace ([^"]*)"$`, sd.terraformerRuns)
-		ctx.Step(`^tfspace should print "([^"]*)" (error|content) on screen$`, sd.tfspaceShouldPrintOnScreen)
-		ctx.Step(`^a project without tfspace\.yml$`, sd.aProjectWithoutTfspaceyml)
-		ctx.Step(`^tfspace should run without error$`, sd.tfspaceShouldRunWithoutError)
-		ctx.Step(`^the tfspace\.yml should contain:$`, sd.theTfspaceymlShouldContain)
+		ctx.Step(`^Terraformer runs "tfspace ([^"]*)"$`, stepDef.terraformerRuns)
+		ctx.Step(`^tfspace should print "([^"]*)" (error|content) on screen$`, stepDef.tfspaceShouldPrintOnScreen)
+		ctx.Step(`^a project without tfspace\.yml$`, stepDef.aProjectWithoutTfspaceyml)
+		ctx.Step(`^tfspace should run without error$`, stepDef.tfspaceShouldRunWithoutError)
+		ctx.Step(`^the tfspace\.yml should contain:$`, stepDef.theTfspaceymlShouldContain)
 	}
 }
 
@@ -164,6 +167,7 @@ func cmdResult(ctx context.Context) (*icmd.Result, error) {
 	if !ok {
 		return nil, errors.New("cmdResult not in context")
 	}
+
 	return result, nil
 }
 
@@ -173,7 +177,7 @@ type T struct {
 }
 
 func (t *T) Log(args ...interface{}) {
-	fmt.Println(args...)
+	fmt.Println(args...) //nolint:forbidigo
 }
 
 func (t *T) FailNow() {
@@ -192,6 +196,7 @@ func (t *T) runCleanup() {
 	for _, f := range t.cleanupFuncs {
 		defer f()
 	}
+
 	t.cleanupFuncs = nil
 }
 

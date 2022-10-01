@@ -10,22 +10,22 @@ import (
 	"gotest.tools/v3/golden"
 )
 
-var testSpaces = space.Spaces{ //nolint:gochecknoglobals
-	{
-		Name:      "dev",
-		Backend:   []string{"dev.backend"},
-		Varfile:   []string{"dev.tfvars"},
-		Workspace: "dev",
-	},
-	{
-		Name:    "stg",
-		Backend: []string{"stg.backend", "stg.be"},
-		Varfile: []string{"stg.tfvars", "stg-secret.tfvars"},
-	},
-}
-
 func TestLoad(t *testing.T) {
 	t.Parallel()
+
+	testSpaces := space.Spaces{
+		{
+			Name:      "dev",
+			Backend:   []string{"dev.backend"},
+			Varfile:   []string{"dev.tfvars"},
+			Workspace: "dev",
+		},
+		{
+			Name:    "stg",
+			Backend: []string{"stg.backend", "stg.be"},
+			Varfile: []string{"stg.tfvars", "stg-secret.tfvars"},
+		},
+	}
 
 	actual, err := store.Load("./testdata/tfspace.yml")
 	assert.NilError(t, err)
@@ -52,7 +52,7 @@ func TestSave(t *testing.T) {
 		}
 	}()
 
-	testSpacesWithProd := space.Spaces{ //nolint:gochecknoglobals
+	testSpacesWithProd := space.Spaces{
 		{
 			Name:      "dev",
 			Backend:   []string{"dev.backend"},

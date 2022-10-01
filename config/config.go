@@ -1,6 +1,8 @@
+// Package config deals with configuration of the CLI.
 package config
 
 import (
+	"github.com/cockroachdb/errors"
 	"github.com/shihanng/tfspace/flag"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,7 +22,8 @@ func WithConfig(cmd *cobra.Command) {
 func GetConfig() (*Config, error) {
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "config: fail to decode")
 	}
+
 	return &config, nil
 }
