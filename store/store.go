@@ -40,18 +40,28 @@ func Save(path string, spaces space.Spaces) (err error) {
 	payload := make(yaml.MapSlice, 0, len(spaces))
 
 	for _, space := range spaces {
+		if len(space.Backend) == 0 && len(space.Varfile) == 0 && space.Workspace == "" {
+			continue
+		}
+
 		payload = append(payload, yaml.MapItem{
 			Key: space.Name,
 			Value: struct {
-				Backend   []string
-				Varfile   []string
-				Workspace string
+				Backend   []string `yaml:"backend,omitempty"`
+				Varfile   []string `yaml:"varfile,omitempty"`
+				Workspace string   `yaml:"workspace,omitempty"`
 			}{
 				Backend:   space.Backend,
 				Varfile:   space.Varfile,
 				Workspace: space.Workspace,
 			},
 		})
+	}
+
+	if len(payload) == 0 {
+		_, err := file.WriteString("")
+
+		return errors.Wrap(err, "store: write empty yaml to file")
 	}
 
 	return errors.Wrap(

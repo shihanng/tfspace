@@ -10,26 +10,34 @@ import (
 	"gotest.tools/v3/golden"
 )
 
-var testSpaces = space.Spaces{ //nolint:gochecknoglobals
-	{
-		Name:      "dev",
-		Backend:   []string{"dev.backend"},
-		Varfile:   []string{"dev.tfvars"},
-		Workspace: "dev",
-	},
-	{
-		Name:    "stg",
-		Backend: []string{"stg.backend", "stg.be"},
-		Varfile: []string{"stg.tfvars", "stg-secret.tfvars"},
-	},
-}
-
 func TestLoad(t *testing.T) {
 	t.Parallel()
+
+	testSpaces := space.Spaces{
+		{
+			Name:      "dev",
+			Backend:   []string{"dev.backend"},
+			Varfile:   []string{"dev.tfvars"},
+			Workspace: "dev",
+		},
+		{
+			Name:    "stg",
+			Backend: []string{"stg.backend", "stg.be"},
+			Varfile: []string{"stg.tfvars", "stg-secret.tfvars"},
+		},
+	}
 
 	actual, err := store.Load("./testdata/tfspace.yml")
 	assert.NilError(t, err)
 	assert.DeepEqual(t, actual, testSpaces)
+}
+
+func TestLoad_empty(t *testing.T) {
+	t.Parallel()
+
+	actual, err := store.Load("./testdata/tfspace_empty.yml")
+	assert.NilError(t, err)
+	assert.DeepEqual(t, actual, space.Spaces{})
 }
 
 func TestSave(t *testing.T) {
@@ -44,11 +52,47 @@ func TestSave(t *testing.T) {
 		}
 	}()
 
-	assert.NilError(t, store.Save(target.Name(), testSpaces))
+	testSpacesWithProd := space.Spaces{
+		{
+			Name:      "dev",
+			Backend:   []string{"dev.backend"},
+			Varfile:   []string{"dev.tfvars"},
+			Workspace: "dev",
+		},
+		{
+			Name:    "stg",
+			Backend: []string{"stg.backend", "stg.be"},
+			Varfile: []string{"stg.tfvars", "stg-secret.tfvars"},
+		},
+		{
+			Name: "prod",
+		},
+	}
+
+	assert.NilError(t, store.Save(target.Name(), testSpacesWithProd))
 
 	actual, err := os.ReadFile(target.Name())
 	assert.NilError(t, err)
 	golden.AssertBytes(t, actual, "tfspace.yml")
+}
+
+func TestSave_empty(t *testing.T) {
+	t.Parallel()
+
+	target, err := os.CreateTemp("", "testdata.yml")
+	assert.NilError(t, err)
+
+	defer func() {
+		if err := os.Remove(target.Name()); err != nil {
+			t.Log(err)
+		}
+	}()
+
+	assert.NilError(t, store.Save(target.Name(), space.Spaces{}))
+
+	actual, err := os.ReadFile(target.Name())
+	assert.NilError(t, err)
+	golden.AssertBytes(t, actual, "tfspace_empty.yml")
 }
 
 func TestLoad_Errors(t *testing.T) {

@@ -11,4 +11,3 @@ stg:
   varfile:
     - stg.tfvars
     - stg-secret.tfvars
-  workspace: ""
