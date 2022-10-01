@@ -1,14 +1,9 @@
 package workspace
 
 import (
-	"io/fs"
-
-	"github.com/cockroachdb/errors"
-	"github.com/shihanng/tfspace/config"
+	cmdspace "github.com/shihanng/tfspace/cmd/space"
 	"github.com/shihanng/tfspace/space"
-	"github.com/shihanng/tfspace/store"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 func newAddCommand() *cobra.Command {
@@ -16,7 +11,7 @@ func newAddCommand() *cobra.Command {
 		Use:           "add <space> <value>",
 		Short:         "Add Terraform's workspace to tfspace",
 		Long:          "Add Terraform's workspace <value> to tfspace's <space>",
-		Args:          cobra.ExactArgs(2),
+		Args:          cobra.ExactArgs(2), //nolint:gomnd
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE:          runAdd,
@@ -26,30 +21,9 @@ func newAddCommand() *cobra.Command {
 }
 
 func runAdd(_ *cobra.Command, args []string) error {
-	logger := zap.L()
+	err := cmdspace.WithSpace(func(s *space.Spaces) {
+		s.SetWorkspace(args[0], args[1])
+	})
 
-	cfg, err := config.GetConfig()
-	if err != nil {
-		return err
-	}
-	logger = logger.With(zap.String("config_path", cfg.Path))
-
-	logger.Debug("Load spaces")
-	spaces, err := store.Load(cfg.Path)
-	if err != nil {
-		if !errors.Is(err, fs.ErrNotExist) {
-			return err
-		}
-
-		logger.Debug("Config does not exist")
-		spaces = space.Spaces{}
-	}
-
-	spaces.SetWorkspace(args[0], args[1])
-
-	if err := store.Save(cfg.Path, spaces); err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

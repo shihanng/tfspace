@@ -4,6 +4,7 @@ package cmd
 import (
 	"io"
 
+	"github.com/cockroachdb/errors"
 	"github.com/shihanng/tfspace/cmd/workspace"
 	"github.com/shihanng/tfspace/config"
 	"github.com/shihanng/tfspace/flag"
@@ -26,7 +27,7 @@ func Execute(options ...func(*cobra.Command)) error {
 		PersistentPostRun: rootPostRun,
 
 		// Disable completion for now.
-		CompletionOptions: cobra.CompletionOptions{
+		CompletionOptions: cobra.CompletionOptions{ //nolint:exhaustruct
 			DisableDefaultCmd: true,
 		},
 	}
@@ -40,7 +41,7 @@ func Execute(options ...func(*cobra.Command)) error {
 		option(rootCmd)
 	}
 
-	return rootCmd.Execute()
+	return rootCmd.Execute() //nolint:wrapcheck
 }
 
 // WithArgs pass arguments to root command. This is for testing purpose.
@@ -75,7 +76,7 @@ func rootPreRun(_ *cobra.Command, _ []string) error {
 	}
 
 	if err != nil {
-		return err
+		return errors.Wrap(err, "root: fail to set logger")
 	}
 
 	zap.ReplaceGlobals(logger)

@@ -1,3 +1,4 @@
+// Package flag contains helper functions to use pflag.
 package flag
 
 import (
