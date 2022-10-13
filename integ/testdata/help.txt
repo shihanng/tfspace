@@ -4,6 +4,7 @@ Usage:
   tfspace [command]
 
 Available Commands:
+  backend     Add/remove Terraform's backend from tfspace
   help        Help about any command
   workspace   Add/remove Terraform's workspace to tfspace
 
