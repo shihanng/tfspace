@@ -29,7 +29,7 @@ Feature: backend
           - stg.backend
 
       """
-    When Terraformer runs "tfspace backend rm dev development.backend"
+    When Terraformer runs "tfspace backend rm dev dev.backend"
     And Terraformer runs "tfspace backend rm stg stg.backend"
     Then tfspace should run without error
     And the tfspace.yml should contain:
