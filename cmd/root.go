@@ -6,6 +6,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/shihanng/tfspace/cmd/backend"
+	"github.com/shihanng/tfspace/cmd/varfile"
 	"github.com/shihanng/tfspace/cmd/workspace"
 	"github.com/shihanng/tfspace/config"
 	"github.com/shihanng/tfspace/flag"
@@ -35,6 +36,7 @@ func Execute(options ...func(*cobra.Command)) error {
 
 	rootCmd.AddCommand(workspace.NewCommand())
 	rootCmd.AddCommand(backend.NewCommand())
+	rootCmd.AddCommand(varfile.NewCommand())
 
 	flag.Bool(rootCmd.PersistentFlags(), "debug", false, "emits debug level logs")
 	config.WithConfig(rootCmd)

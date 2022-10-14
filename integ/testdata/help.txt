@@ -6,6 +6,7 @@ Usage:
 Available Commands:
   backend     Add/remove Terraform's backend from tfspace
   help        Help about any command
+  varfile     Add/remove Terraform's varfile from tfspace
   workspace   Add/remove Terraform's workspace to tfspace
 
 Flags:
