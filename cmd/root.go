@@ -2,7 +2,10 @@
 package cmd
 
 import (
+	"fmt"
 	"io"
+	"os"
+	"os/exec"
 
 	"github.com/cockroachdb/errors"
 	"github.com/shihanng/tfspace/cmd/backend"
@@ -12,6 +15,7 @@ import (
 	"github.com/shihanng/tfspace/flag"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/twpayne/go-shell"
 	"go.uber.org/zap"
 )
 
@@ -24,9 +28,11 @@ func Execute(options ...func(*cobra.Command)) error {
 		Use:               "tfspace",
 		Short:             "Manage multiple environments in a Terraform project with ease.",
 		Long:              "Manage multiple environments in a Terraform project with ease.",
+		Args:              cobra.ExactArgs(1),
 		SilenceErrors:     true,
 		PersistentPreRunE: rootPreRun,
 		PersistentPostRun: rootPostRun,
+		RunE:              runRoot,
 
 		// Disable completion for now.
 		CompletionOptions: cobra.CompletionOptions{ //nolint:exhaustruct
@@ -84,6 +90,32 @@ func rootPreRun(_ *cobra.Command, _ []string) error {
 	}
 
 	zap.ReplaceGlobals(logger)
+
+	return nil
+}
+
+func runRoot(_ *cobra.Command, args []string) error {
+	logger := zap.L()
+
+	shell, found := shell.CurrentUserShell()
+
+	logger.With(zap.String("shell", shell))
+
+	if !found {
+		logger.Debug("Failed to get user shell")
+	}
+
+	cmd := exec.Command(shell) //nolint:gosec
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = []string{
+		fmt.Sprintf("TFSPACE=%s", args[0]),
+	}
+
+	if err := cmd.Run(); err != nil {
+		return errors.Wrapf(err, "cmd: fail to run %s", shell)
+	}
 
 	return nil
 }
