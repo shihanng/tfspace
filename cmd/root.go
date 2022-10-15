@@ -2,17 +2,18 @@
 package cmd
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
 
 	"github.com/cockroachdb/errors"
 	"github.com/shihanng/tfspace/cmd/backend"
+	cmdspace "github.com/shihanng/tfspace/cmd/space"
 	"github.com/shihanng/tfspace/cmd/varfile"
 	"github.com/shihanng/tfspace/cmd/workspace"
 	"github.com/shihanng/tfspace/config"
 	"github.com/shihanng/tfspace/flag"
+	"github.com/shihanng/tfspace/space"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/twpayne/go-shell"
@@ -29,6 +30,7 @@ func Execute(options ...func(*cobra.Command)) error {
 		Short:             "Manage multiple environments in a Terraform project with ease.",
 		Long:              "Manage multiple environments in a Terraform project with ease.",
 		Args:              cobra.ExactArgs(1),
+		SilenceUsage:      true,
 		SilenceErrors:     true,
 		PersistentPreRunE: rootPreRun,
 		PersistentPostRun: rootPostRun,
@@ -99,7 +101,7 @@ func runRoot(_ *cobra.Command, args []string) error {
 
 	shell, found := shell.CurrentUserShell()
 
-	logger.With(zap.String("shell", shell))
+	logger = logger.With(zap.String("shell", shell))
 
 	if !found {
 		logger.Debug("Failed to get user shell")
@@ -109,8 +111,21 @@ func runRoot(_ *cobra.Command, args []string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = []string{
-		fmt.Sprintf("TFSPACE=%s", args[0]),
+	cmd.Dir = "/home/shihanng/dev/me/github.com/shihanng/tfspace"
+
+	err := cmdspace.WithSpace(func(s *space.Spaces) error {
+		env, err := s.Env(args[0])
+		if err != nil {
+			return err
+		}
+
+		cmd.Env = os.Environ()
+		cmd.Env = append(cmd.Env, env...)
+
+		return nil
+	})
+	if err != nil {
+		return err
 	}
 
 	if err := cmd.Run(); err != nil {
