@@ -13,7 +13,7 @@ import (
 
 // WithSpace wraps around exec. If load tfspace.yml then execute exec,
 // then save the changes back to tfspace.yml.
-func WithSpace(exec func(s *space.Spaces)) error {
+func WithSpace(exec func(s *space.Spaces) error) error {
 	logger := zap.L()
 
 	cfg, err := config.GetConfig()
@@ -36,7 +36,9 @@ func WithSpace(exec func(s *space.Spaces)) error {
 		spaces = space.Spaces{}
 	}
 
-	exec(&spaces)
+	if err := exec(&spaces); err != nil {
+		return err
+	}
 
 	if err := store.Save(cfg.Path, spaces); err != nil {
 		return err

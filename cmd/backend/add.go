@@ -21,8 +21,10 @@ func newAddCommand() *cobra.Command {
 }
 
 func runAdd(_ *cobra.Command, args []string) error {
-	err := cmdspace.WithSpace(func(s *space.Spaces) {
+	err := cmdspace.WithSpace(func(s *space.Spaces) error {
 		s.AddBackend(args[0], args[1])
+
+		return nil
 	})
 
 	return err
