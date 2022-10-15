@@ -122,3 +122,71 @@ func TestUnsetWorkspace(t *testing.T) {
 		},
 	})
 }
+
+func TestEnv(t *testing.T) {
+	t.Parallel()
+
+	testSpaces := space.Spaces{
+		{
+			Name:      "dev",
+			Backend:   []string{"backend.dev", "be.dev"},
+			Varfile:   []string{"abc.tfvars"},
+			Workspace: "dev_ws",
+		},
+		{
+			Name:      "stg",
+			Backend:   []string{"backend.stg", "b.stg"},
+			Varfile:   []string{"stg.tfvars", "secret.tfvars"},
+			Workspace: "stg",
+		},
+	}
+
+	tests := []struct {
+		name        string
+		expected    []string
+		expectedErr interface{}
+	}{
+		{
+			name: "dev",
+			expected: []string{
+				`TFSPACE=dev`,
+				`TF_CLI_ARGS_init='-backend-config="backend.dev" -backend-config="be.dev"'`,
+				`TF_CLI_ARGS_plan='-var-file="abc.tfvars"'`,
+				`TF_CLI_ARGS_apply='-var-file="abc.tfvars"'`,
+				`TF_WORKSPACE=dev_ws`,
+			},
+			expectedErr: noError,
+		},
+		{
+			name: "stg",
+			expected: []string{
+				`TFSPACE=stg`,
+				`TF_CLI_ARGS_init='-backend-config="backend.stg" -backend-config="b.stg"'`,
+				`TF_CLI_ARGS_plan='-var-file="stg.tfvars" -var-file="secret.tfvars"'`,
+				`TF_CLI_ARGS_apply='-var-file="stg.tfvars" -var-file="secret.tfvars"'`,
+				"TF_WORKSPACE=stg",
+			},
+			expectedErr: noError,
+		},
+		{
+			name:        "prod",
+			expected:    nil,
+			expectedErr: space.ErrNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual, err := testSpaces.Env(tt.name)
+			assert.DeepEqual(t, actual, tt.expected)
+			assert.ErrorType(t, err, tt.expectedErr)
+		})
+	}
+}
+
+func noError(err error) bool {
+	return err == nil
+}
