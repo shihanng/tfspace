@@ -10,6 +10,7 @@ import (
 	"github.com/samber/lo"
 )
 
+// ErrNotFound indicates when a space is not found.
 var ErrNotFound = errors.New("space not found")
 
 // Space contains the configuration of each space.
