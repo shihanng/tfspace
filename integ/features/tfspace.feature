@@ -11,4 +11,4 @@ Feature: show help
 
   Scenario: tfspace abc
     When Terraformer runs "tfspace abc"
-    Then tfspace should print "unknown command" error on screen
+    Then tfspace should print "space not found" error on screen
