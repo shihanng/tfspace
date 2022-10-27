@@ -1,6 +1,7 @@
 package integ_test
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"github.com/cucumber/godog/colors"
 	"github.com/spf13/pflag"
 	"gotest.tools/v3/assert"
+	"gotest.tools/v3/assert/cmp"
 	"gotest.tools/v3/env"
 	"gotest.tools/v3/fs"
 	"gotest.tools/v3/golden"
@@ -66,6 +68,14 @@ type stepDefinition struct {
 func (s *stepDefinition) terraformerRuns(ctx context.Context, args string) (context.Context, error) {
 	cmd := icmd.Command(s.binPath, strings.Fields(args)...)
 	res := icmd.RunCmd(cmd)
+
+	return withcCmdResultCtx(ctx, res), nil
+}
+
+func (s *stepDefinition) terraformerRunsAndThenEnv(ctx context.Context, args string) (context.Context, error) {
+	buf := bytes.NewBufferString("env")
+	cmd := icmd.Command(s.binPath, strings.Fields(args)...)
+	res := icmd.RunCmd(cmd, icmd.WithStdin(buf))
 
 	return withcCmdResultCtx(ctx, res), nil
 }
@@ -129,6 +139,20 @@ func (s *stepDefinition) theTfspaceymlShouldContain(expected *godog.DocString) e
 	})
 }
 
+func (s *stepDefinition) shouldSetEnvironmentVariables(ctx context.Context, table *godog.Table) error {
+	result, err := cmdResult(ctx)
+	if err != nil {
+		return err
+	}
+
+	return s.assertWith(func(a *T) {
+		for _, row := range table.Rows {
+			envRow := fmt.Sprintf("%s=%s", row.Cells[0].Value, row.Cells[1].Value)
+			assert.Assert(a, cmp.Contains(result.String(), envRow))
+		}
+	})
+}
+
 func (s *stepDefinition) assertWith(f func(t *T)) error {
 	f(s.t)
 
@@ -153,6 +177,8 @@ func InitializeScenario(binPath string) func(ctx *godog.ScenarioContext) {
 		ctx.Step(`^a project without tfspace\.yml$`, stepDef.aProjectWithoutTfspaceyml)
 		ctx.Step(`^tfspace should run without error$`, stepDef.tfspaceShouldRunWithoutError)
 		ctx.Step(`^the tfspace\.yml should contain:$`, stepDef.theTfspaceymlShouldContain)
+		ctx.Step(`^should set environment variables:$`, stepDef.shouldSetEnvironmentVariables)
+		ctx.Step(`^Terraformer runs "tfspace ([^"]*)" and then env$`, stepDef.terraformerRunsAndThenEnv)
 	}
 }
 
