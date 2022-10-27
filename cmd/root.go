@@ -111,7 +111,6 @@ func runRoot(_ *cobra.Command, args []string) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Dir = "/home/shihanng/dev/me/github.com/shihanng/tfspace"
 
 	err := cmdspace.WithSpace(func(s *space.Spaces) error {
 		env, err := s.Env(args[0])
