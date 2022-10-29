@@ -21,8 +21,10 @@ func newRmCommand() *cobra.Command {
 }
 
 func runRm(_ *cobra.Command, args []string) error {
-	err := cmdspace.WithSpace(func(s *space.Spaces) {
+	err := cmdspace.WithSpace(func(s *space.Spaces) error {
 		s.UnsetWorkspace(args[0])
+
+		return nil
 	})
 
 	return err
