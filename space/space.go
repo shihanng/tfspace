@@ -151,20 +151,20 @@ func (s *Spaces) Env(name string) ([]string, error) {
 	if len(space.Backend) > 0 {
 		backends := make([]string, 0, len(space.Backend))
 		for _, b := range space.Backend {
-			backends = append(backends, fmt.Sprintf("-backend-config=\"%s\"", b))
+			backends = append(backends, fmt.Sprintf("'-backend-config=%s'", b))
 		}
 
-		envs = append(envs, fmt.Sprintf("TF_CLI_ARGS_init='%s'", strings.Join(backends, " ")))
+		envs = append(envs, fmt.Sprintf("TF_CLI_ARGS_init=%s", strings.Join(backends, " ")))
 	}
 
 	if len(space.Varfile) > 0 {
 		varfiles := make([]string, 0, len(space.Varfile))
 		for _, v := range space.Varfile {
-			varfiles = append(varfiles, fmt.Sprintf("-var-file=\"%s\"", v))
+			varfiles = append(varfiles, fmt.Sprintf("'-var-file=%s'", v))
 		}
 
-		envs = append(envs, fmt.Sprintf("TF_CLI_ARGS_plan='%s'", strings.Join(varfiles, " ")))
-		envs = append(envs, fmt.Sprintf("TF_CLI_ARGS_apply='%s'", strings.Join(varfiles, " ")))
+		envs = append(envs, fmt.Sprintf("TF_CLI_ARGS_plan=%s", strings.Join(varfiles, " ")))
+		envs = append(envs, fmt.Sprintf("TF_CLI_ARGS_apply=%s", strings.Join(varfiles, " ")))
 	}
 
 	if space.Workspace != "" {
