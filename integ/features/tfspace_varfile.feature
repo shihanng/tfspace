@@ -43,6 +43,6 @@ Feature: varfile
     When Terraformer runs "tfspace dev" and then env
     Then tfspace should run without error
     And should set environment variables:
-      | TFSPACE           | dev                              |
-      | TF_CLI_ARGS_plan  | '-var-file="development.tfvars"' |
-      | TF_CLI_ARGS_apply | '-var-file="development.tfvars"' |
+      | TFSPACE           | dev                            |
+      | TF_CLI_ARGS_plan  | '-var-file=development.tfvars' |
+      | TF_CLI_ARGS_apply | '-var-file=development.tfvars' |

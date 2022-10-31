@@ -42,5 +42,5 @@ Feature: backend
     When Terraformer runs "tfspace dev" and then env
     Then tfspace should run without error
     And should set environment variables:
-      | TFSPACE          | dev                                     |
-      | TF_CLI_ARGS_init | '-backend-config="development.backend"' |
+      | TFSPACE          | dev                                   |
+      | TF_CLI_ARGS_init | '-backend-config=development.backend' |
