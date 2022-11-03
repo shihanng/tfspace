@@ -14,7 +14,6 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/cucumber/godog"
 	"github.com/cucumber/godog/colors"
-	"github.com/spf13/pflag"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/assert/cmp"
 	"gotest.tools/v3/env"
@@ -25,7 +24,11 @@ import (
 
 const tmpDirPrefix = "tfspace_integtest"
 
-func TestMain(m *testing.M) {
+var path = flag.String("path", "../tfspace", "path to the tfspace binary") //nolint:gochecknoglobals
+
+func TestFeatures(t *testing.T) {
+	t.Parallel()
+
 	// These are default values. We can override these with flags.
 	opts := godog.Options{ //nolint:exhaustruct
 		Output:    colors.Colored(os.Stdout),
@@ -33,31 +36,22 @@ func TestMain(m *testing.M) {
 		Randomize: time.Now().UTC().UnixNano(), // randomize scenario execution order
 	}
 
-	godog.BindCommandLineFlags("godog.", &opts)
-
-	path := flag.String("path", "../tfspace", "path to the tfspace binary")
+	flag.Parse()
 
 	binPath, err := filepath.Abs(*path)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 
-	flag.Parse()
-	pflag.Parse()
-	opts.Paths = pflag.Args()
-
-	status := godog.TestSuite{ //nolint:exhaustruct
+	suite := godog.TestSuite{ //nolint:exhaustruct
 		Name:                "tfspace",
 		ScenarioInitializer: InitializeScenario(binPath),
 		Options:             &opts,
-	}.Run()
-
-	// Optional: Run `testing` package's logic besides godog.
-	if st := m.Run(); st > status {
-		status = st
 	}
 
-	os.Exit(status)
+	if suite.Run() != 0 {
+		t.Fatal("non-zero status returned, failed to run feature tests")
+	}
 }
 
 type stepDefinition struct {
