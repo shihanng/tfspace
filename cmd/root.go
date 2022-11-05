@@ -12,7 +12,6 @@ import (
 	"github.com/shihanng/tfspace/cmd/varfile"
 	"github.com/shihanng/tfspace/cmd/workspace"
 	"github.com/shihanng/tfspace/config"
-	"github.com/shihanng/tfspace/flag"
 	"github.com/shihanng/tfspace/space"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -46,11 +45,16 @@ func Execute(options ...func(*cobra.Command)) error {
 	rootCmd.AddCommand(backend.NewCommand())
 	rootCmd.AddCommand(varfile.NewCommand())
 
-	flag.Bool(rootCmd.PersistentFlags(), "debug", false, "emits debug level logs")
+	rootCmd.PersistentFlags().Bool("debug", false, "emits debug level logs")
+
 	config.WithConfig(rootCmd)
 
 	for _, option := range options {
 		option(rootCmd)
+	}
+
+	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
+		return errors.Wrap(err, "cmd: fail to bind persistent flags")
 	}
 
 	return rootCmd.Execute() //nolint:wrapcheck
