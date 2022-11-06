@@ -3,19 +3,15 @@ package cmd
 
 import (
 	"io"
-	"os"
-	"os/exec"
 
 	"github.com/cockroachdb/errors"
 	"github.com/shihanng/tfspace/cmd/backend"
-	cmdspace "github.com/shihanng/tfspace/cmd/space"
+	"github.com/shihanng/tfspace/cmd/use"
 	"github.com/shihanng/tfspace/cmd/varfile"
 	"github.com/shihanng/tfspace/cmd/workspace"
 	"github.com/shihanng/tfspace/config"
-	"github.com/shihanng/tfspace/space"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/twpayne/go-shell"
 	"go.uber.org/zap"
 )
 
@@ -33,7 +29,6 @@ func Execute(options ...func(*cobra.Command)) error {
 		SilenceErrors:     true,
 		PersistentPreRunE: rootPreRun,
 		PersistentPostRun: rootPostRun,
-		RunE:              runRoot,
 
 		// Disable completion for now.
 		CompletionOptions: cobra.CompletionOptions{ //nolint:exhaustruct
@@ -44,6 +39,7 @@ func Execute(options ...func(*cobra.Command)) error {
 	rootCmd.AddCommand(workspace.NewCommand())
 	rootCmd.AddCommand(backend.NewCommand())
 	rootCmd.AddCommand(varfile.NewCommand())
+	rootCmd.AddCommand(use.NewCommand())
 
 	rootCmd.PersistentFlags().Bool("debug", false, "emits debug level logs")
 
@@ -96,44 +92,6 @@ func rootPreRun(_ *cobra.Command, _ []string) error {
 	}
 
 	zap.ReplaceGlobals(logger)
-
-	return nil
-}
-
-func runRoot(_ *cobra.Command, args []string) error {
-	logger := zap.L()
-
-	shell, found := shell.CurrentUserShell()
-
-	logger = logger.With(zap.String("shell", shell))
-
-	if !found {
-		logger.Debug("Failed to get user shell")
-	}
-
-	cmd := exec.Command(shell) //nolint:gosec
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmdspace.WithSpace(func(s *space.Spaces) error {
-		env, err := s.Env(args[0])
-		if err != nil {
-			return err
-		}
-
-		cmd.Env = os.Environ()
-		cmd.Env = append(cmd.Env, env...)
-
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "cmd: fail to run %s", shell)
-	}
 
 	return nil
 }
