@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	cmdspace "github.com/shihanng/tfspace/cmd/space"
 	"github.com/shihanng/tfspace/space"
 	"github.com/spf13/cobra"
