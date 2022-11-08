@@ -42,7 +42,7 @@ func useRoot(_ *cobra.Command, args []string) error {
 	cmd.Stderr = os.Stderr
 
 	err := cmdspace.WithSpace(func(s *space.Spaces) error {
-		env, err := s.Env(args[0])
+		env, err := s.Env(args[0], true)
 		if err != nil {
 			return err
 		}

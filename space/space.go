@@ -137,7 +137,7 @@ func (s *Spaces) UnsetWorkspace(name string) {
 
 // Env return list of environment variables in the form of
 // key=value that can be passed to exec.Command.Env.
-func (s *Spaces) Env(name string) ([]string, error) {
+func (s *Spaces) Env(name string, hasApply bool) ([]string, error) {
 	space, found := findSpace(*s, name)
 
 	if !found {
@@ -164,7 +164,10 @@ func (s *Spaces) Env(name string) ([]string, error) {
 		}
 
 		envs = append(envs, fmt.Sprintf("TF_CLI_ARGS_plan=%s", strings.Join(varfiles, " ")))
-		envs = append(envs, fmt.Sprintf("TF_CLI_ARGS_apply=%s", strings.Join(varfiles, " ")))
+
+		if hasApply {
+			envs = append(envs, fmt.Sprintf("TF_CLI_ARGS_apply=%s", strings.Join(varfiles, " ")))
+		}
 	}
 
 	if space.Workspace != "" {

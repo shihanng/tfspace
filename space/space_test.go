@@ -145,6 +145,7 @@ func TestEnv(t *testing.T) { //nolint:funlen
 		name        string
 		expected    []string
 		expectedErr interface{}
+		hasApply    bool
 	}{
 		{
 			name: "dev",
@@ -156,6 +157,7 @@ func TestEnv(t *testing.T) { //nolint:funlen
 				`TF_WORKSPACE=dev_ws`,
 			},
 			expectedErr: noError,
+			hasApply:    true,
 		},
 		{
 			name: "stg",
@@ -163,15 +165,16 @@ func TestEnv(t *testing.T) { //nolint:funlen
 				`TFSPACE=stg`,
 				`TF_CLI_ARGS_init='-backend-config=backend.stg' '-backend-config=b.stg'`,
 				`TF_CLI_ARGS_plan='-var-file=stg.tfvars' '-var-file=secret.tfvars'`,
-				`TF_CLI_ARGS_apply='-var-file=stg.tfvars' '-var-file=secret.tfvars'`,
 				"TF_WORKSPACE=stg",
 			},
 			expectedErr: noError,
+			hasApply:    false,
 		},
 		{
 			name:        "prod",
 			expected:    nil,
 			expectedErr: space.ErrNotFound,
+			hasApply:    true,
 		},
 	}
 
@@ -180,7 +183,7 @@ func TestEnv(t *testing.T) { //nolint:funlen
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			actual, err := testSpaces.Env(tt.name)
+			actual, err := testSpaces.Env(tt.name, tt.hasApply)
 			assert.DeepEqual(t, actual, tt.expected)
 			assert.ErrorType(t, err, tt.expectedErr)
 		})
