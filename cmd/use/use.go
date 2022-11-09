@@ -9,6 +9,7 @@ import (
 	cmdspace "github.com/shihanng/tfspace/cmd/space"
 	"github.com/shihanng/tfspace/space"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/twpayne/go-shell"
 	"go.uber.org/zap"
 )
@@ -22,7 +23,17 @@ func NewCommand() *cobra.Command {
 		RunE:  useRoot,
 	}
 
+	useCmd.Flags().BoolP("with-apply", "a", false, "export TF_CLI_ARGS_apply environment variable")
+
+	if err := viper.BindPFlags(useCmd.Flags()); err != nil {
+		return nil
+	}
+
 	return useCmd
+}
+
+type useConfig struct {
+	WithApply bool `mapstructure:"with-apply"`
 }
 
 func useRoot(_ *cobra.Command, args []string) error {
@@ -36,13 +47,18 @@ func useRoot(_ *cobra.Command, args []string) error {
 		logger.Debug("Failed to get user shell")
 	}
 
+	var config useConfig
+	if err := viper.Unmarshal(&config); err != nil {
+		return errors.Wrap(err, "use: fail to get config")
+	}
+
 	cmd := exec.Command(shell) //nolint:gosec
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	err := cmdspace.WithSpace(func(s *space.Spaces) error {
-		env, err := s.Env(args[0], true)
+		env, err := s.Env(args[0], config.WithApply)
 		if err != nil {
 			return err
 		}
