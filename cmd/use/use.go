@@ -25,10 +25,6 @@ func NewCommand() *cobra.Command {
 
 	useCmd.Flags().BoolP("with-apply", "a", false, "export TF_CLI_ARGS_apply environment variable")
 
-	if err := viper.BindPFlags(useCmd.Flags()); err != nil {
-		return nil
-	}
-
 	return useCmd
 }
 

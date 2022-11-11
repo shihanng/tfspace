@@ -3,6 +3,7 @@ package cmd
 
 import (
 	"io"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/shihanng/tfspace/cmd/backend"
@@ -49,11 +50,27 @@ func Execute(options ...func(*cobra.Command)) error {
 		option(rootCmd)
 	}
 
-	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
-		return errors.Wrap(err, "cmd: fail to bind persistent flags")
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+
+	if err := BindPFlags(rootCmd); err != nil {
+		return err
 	}
 
 	return rootCmd.Execute() //nolint:wrapcheck
+}
+
+func BindPFlags(cmd *cobra.Command) error {
+	for _, c := range cmd.Commands() {
+		if err := BindPFlags(c); err != nil {
+			return err
+		}
+	}
+
+	if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
+		return errors.Wrap(err, "cmd: fail to bind persistent flags")
+	}
+
+	return errors.Wrap(viper.BindPFlags(cmd.Flags()), "cmd: fail to bind flags")
 }
 
 // WithArgs pass arguments to root command. This is for testing purpose.
