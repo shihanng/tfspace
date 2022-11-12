@@ -52,16 +52,16 @@ func Execute(options ...func(*cobra.Command)) error {
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
-	if err := BindPFlags(rootCmd); err != nil {
+	if err := bindPFlags(rootCmd); err != nil {
 		return err
 	}
 
 	return rootCmd.Execute() //nolint:wrapcheck
 }
 
-func BindPFlags(cmd *cobra.Command) error {
+func bindPFlags(cmd *cobra.Command) error {
 	for _, c := range cmd.Commands() {
-		if err := BindPFlags(c); err != nil {
+		if err := bindPFlags(c); err != nil {
 			return err
 		}
 	}
