@@ -39,7 +39,7 @@ Feature: backend
           - development.backend
 
       """
-    When Terraformer runs "tfspace dev" and then env
+    When Terraformer runs "tfspace use dev" and then env
     Then tfspace should run without error
     And should set environment variables:
       | TFSPACE          | dev                                   |

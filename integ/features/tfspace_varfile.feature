@@ -40,7 +40,7 @@ Feature: varfile
           - development.tfvars
 
       """
-    When Terraformer runs "tfspace dev" and then env
+    When Terraformer runs "tfspace use dev -a" and then env
     Then tfspace should run without error
     And should set environment variables:
       | TFSPACE           | dev                            |

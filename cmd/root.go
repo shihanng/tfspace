@@ -3,19 +3,16 @@ package cmd
 
 import (
 	"io"
-	"os"
-	"os/exec"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	"github.com/shihanng/tfspace/cmd/backend"
-	cmdspace "github.com/shihanng/tfspace/cmd/space"
+	"github.com/shihanng/tfspace/cmd/use"
 	"github.com/shihanng/tfspace/cmd/varfile"
 	"github.com/shihanng/tfspace/cmd/workspace"
 	"github.com/shihanng/tfspace/config"
-	"github.com/shihanng/tfspace/space"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/twpayne/go-shell"
 	"go.uber.org/zap"
 )
 
@@ -33,7 +30,6 @@ func Execute(options ...func(*cobra.Command)) error {
 		SilenceErrors:     true,
 		PersistentPreRunE: rootPreRun,
 		PersistentPostRun: rootPostRun,
-		RunE:              runRoot,
 
 		// Disable completion for now.
 		CompletionOptions: cobra.CompletionOptions{ //nolint:exhaustruct
@@ -44,6 +40,7 @@ func Execute(options ...func(*cobra.Command)) error {
 	rootCmd.AddCommand(workspace.NewCommand())
 	rootCmd.AddCommand(backend.NewCommand())
 	rootCmd.AddCommand(varfile.NewCommand())
+	rootCmd.AddCommand(use.NewCommand())
 
 	rootCmd.PersistentFlags().Bool("debug", false, "emits debug level logs")
 
@@ -53,11 +50,27 @@ func Execute(options ...func(*cobra.Command)) error {
 		option(rootCmd)
 	}
 
-	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
-		return errors.Wrap(err, "cmd: fail to bind persistent flags")
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+
+	if err := bindPFlags(rootCmd); err != nil {
+		return err
 	}
 
 	return rootCmd.Execute() //nolint:wrapcheck
+}
+
+func bindPFlags(cmd *cobra.Command) error {
+	for _, c := range cmd.Commands() {
+		if err := bindPFlags(c); err != nil {
+			return err
+		}
+	}
+
+	if err := viper.BindPFlags(cmd.PersistentFlags()); err != nil {
+		return errors.Wrap(err, "cmd: fail to bind persistent flags")
+	}
+
+	return errors.Wrap(viper.BindPFlags(cmd.Flags()), "cmd: fail to bind flags")
 }
 
 // WithArgs pass arguments to root command. This is for testing purpose.
@@ -96,44 +109,6 @@ func rootPreRun(_ *cobra.Command, _ []string) error {
 	}
 
 	zap.ReplaceGlobals(logger)
-
-	return nil
-}
-
-func runRoot(_ *cobra.Command, args []string) error {
-	logger := zap.L()
-
-	shell, found := shell.CurrentUserShell()
-
-	logger = logger.With(zap.String("shell", shell))
-
-	if !found {
-		logger.Debug("Failed to get user shell")
-	}
-
-	cmd := exec.Command(shell) //nolint:gosec
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmdspace.WithSpace(func(s *space.Spaces) error {
-		env, err := s.Env(args[0])
-		if err != nil {
-			return err
-		}
-
-		cmd.Env = os.Environ()
-		cmd.Env = append(cmd.Env, env...)
-
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	if err := cmd.Run(); err != nil {
-		return errors.Wrapf(err, "cmd: fail to run %s", shell)
-	}
 
 	return nil
 }

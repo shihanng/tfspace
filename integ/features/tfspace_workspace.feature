@@ -33,7 +33,7 @@ Feature: workspace
         workspace: staging
 
       """
-    When Terraformer runs "tfspace stg" and then env
+    When Terraformer runs "tfspace use stg" and then env
     Then tfspace should run without error
     And should set environment variables:
       | TFSPACE           | stg     |
